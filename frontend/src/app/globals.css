@@ -11,8 +11,8 @@ body {
 
 /*
  * Print / "Download PDF": the Download button calls window.print(), and this
- * stylesheet reduces the printed page to just the NDA document (#nda-document),
- * hiding the app chrome and form.
+ * stylesheet reduces the printed page to just the generated document
+ * (#document-preview), hiding the app chrome, chat, and form.
  */
 @media print {
   /* Hide everything, then reveal only the document and its contents. */
@@ -20,12 +20,12 @@ body {
     visibility: hidden;
   }
 
-  #nda-document,
-  #nda-document * {
+  #document-preview,
+  #document-preview * {
     visibility: visible;
   }
 
-  #nda-document {
+  #document-preview {
     position: absolute;
     inset: 0 auto auto 0;
     width: 100%;
@@ -39,9 +39,9 @@ body {
     display: none !important;
   }
 
-  /* Keep numbered clauses and signature blocks from splitting across pages. */
-  #nda-document li,
-  #nda-document dl > div {
+  /* Keep clauses and signature blocks from splitting across pages. */
+  #document-preview li,
+  #document-preview dl > div {
     break-inside: avoid;
   }
 
