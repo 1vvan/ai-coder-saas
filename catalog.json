@@ -1,0 +1,68 @@
+{
+  "name": "Prelegal Legal Document Template Catalog",
+  "description": "Catalog of standard legal agreement templates sourced from Common Paper (https://github.com/CommonPaper) and licensed under CC BY 4.0. Each entry maps a template to its markdown file in the templates/ directory.",
+  "source": "https://github.com/CommonPaper",
+  "license": "CC BY 4.0",
+  "templates": [
+    {
+      "name": "Mutual Non-Disclosure Agreement (Standard Terms)",
+      "description": "Standard Terms for a mutual NDA that lets each party disclose confidential information for a defined purpose, covering use, protection, exclusions, and return of confidential information. Used together with its cover page.",
+      "filename": "Mutual-NDA.md"
+    },
+    {
+      "name": "Mutual Non-Disclosure Agreement (Cover Page)",
+      "description": "Fill-in cover page for the Mutual NDA that captures the parties, effective date, purpose, and any modifications to the standard terms.",
+      "filename": "Mutual-NDA-coverpage.md"
+    },
+    {
+      "name": "Cloud Service Agreement",
+      "description": "Standard agreement for providing access to a hosted cloud (SaaS) service, covering access and use, support, fees, data, warranties, and liability.",
+      "filename": "CSA.md"
+    },
+    {
+      "name": "Design Partner Agreement",
+      "description": "Agreement for an early-access design partner program in which a partner gets early access to a product and provides feedback to help develop and improve it.",
+      "filename": "Design-Partner-Agreement.md"
+    },
+    {
+      "name": "Service Level Agreement",
+      "description": "Service level terms for a cloud service, defining target uptime, how availability and downtime are calculated, exclusions, and service credit remedies.",
+      "filename": "SLA.md"
+    },
+    {
+      "name": "Professional Services Agreement",
+      "description": "Agreement for professional/consulting services delivered under statements of work (SOWs), covering services, change orders, fees, IP ownership, and warranties.",
+      "filename": "PSA.md"
+    },
+    {
+      "name": "Data Processing Agreement",
+      "description": "Data processing addendum governing how a provider processes personal data on behalf of a customer, addressing controller/processor roles, subprocessors, security, and data subject rights.",
+      "filename": "DPA.md"
+    },
+    {
+      "name": "Software License Agreement",
+      "description": "Agreement licensing installable software to a customer, covering license grant, permitted uses, support, fees, IP, warranties, and liability.",
+      "filename": "Software-License-Agreement.md"
+    },
+    {
+      "name": "Partnership Agreement",
+      "description": "Business partnership agreement defining each party's obligations, payment and taxes, intellectual property, confidentiality, and general terms of cooperation.",
+      "filename": "Partnership-Agreement.md"
+    },
+    {
+      "name": "Pilot Agreement",
+      "description": "Agreement for a time-limited pilot or evaluation of a product, granting limited access and use for evaluation purposes with associated terms and restrictions.",
+      "filename": "Pilot-Agreement.md"
+    },
+    {
+      "name": "Business Associate Agreement",
+      "description": "HIPAA business associate agreement setting out a provider's obligations and restrictions on the use and disclosure of protected health information (PHI).",
+      "filename": "BAA.md"
+    },
+    {
+      "name": "AI Addendum",
+      "description": "Addendum adding terms for AI-powered services to an existing agreement, covering use of inputs and outputs, restrictions, and model training.",
+      "filename": "AI-Addendum.md"
+    }
+  ]
+}
