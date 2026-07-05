@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import NdaChat from "@/components/NdaChat";
 import NdaDocument from "@/components/NdaDocument";
 import NdaForm from "@/components/NdaForm";
 import { defaultFormData } from "@/lib/nda";
@@ -15,8 +16,8 @@ export default function Home() {
           <div>
             <h1 className="text-lg font-semibold">Mutual NDA Creator</h1>
             <p className="text-sm text-slate-500">
-              Fill in the details, preview your agreement, and download it as a
-              PDF.
+              Chat with the AI to build your agreement, fine-tune any field, then
+              download it as a PDF.
             </p>
           </div>
           <button
@@ -30,9 +31,14 @@ export default function Home() {
       </header>
 
       <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 py-8 lg:grid-cols-2">
-        <section className="no-print rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-          <NdaForm data={data} onChange={setData} />
-        </section>
+        <div className="no-print space-y-6">
+          <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <NdaChat data={data} onChange={setData} />
+          </section>
+          <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <NdaForm data={data} onChange={setData} />
+          </section>
+        </div>
 
         <section className="lg:sticky lg:top-8 lg:self-start">
           <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">

@@ -1,0 +1,9 @@
+# Secrets / local env
+.env
+.env.local
+
+# Python / backend
+__pycache__/
+*.py[cod]
+backend/.venv/
+.pytest_cache/
