@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/*
+ * Print / "Download PDF": the Download button calls window.print(), and this
+ * stylesheet reduces the printed page to just the NDA document (#nda-document),
+ * hiding the app chrome and form.
+ */
+@media print {
+  /* Hide everything, then reveal only the document and its contents. */
+  body * {
+    visibility: hidden;
+  }
+
+  #nda-document,
+  #nda-document * {
+    visibility: visible;
+  }
+
+  #nda-document {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  /* Elements explicitly excluded from print output. */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Keep numbered clauses and signature blocks from splitting across pages. */
+  #nda-document li,
+  #nda-document dl > div {
+    break-inside: avoid;
+  }
+
+  @page {
+    margin: 0.75in;
+  }
+}
