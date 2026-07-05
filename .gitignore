@@ -7,3 +7,9 @@ __pycache__/
 *.py[cod]
 backend/.venv/
 .pytest_cache/
+
+# Temporary SQLite database (recreated on startup)
+*.db
+
+# Local Claude worktrees
+.claude/worktrees/

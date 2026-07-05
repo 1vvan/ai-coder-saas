@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import LoginScreen from "@/components/LoginScreen";
 import NdaChat from "@/components/NdaChat";
 import NdaDocument from "@/components/NdaDocument";
 import NdaForm from "@/components/NdaForm";
 import { defaultFormData } from "@/lib/nda";
+import { clearStoredEmail, useStoredEmail } from "@/lib/session";
 
 export default function Home() {
   const [data, setData] = useState(defaultFormData);
+  const email = useStoredEmail();
+
+  if (!email) return <LoginScreen />;
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
@@ -20,13 +25,26 @@ export default function Home() {
               download it as a PDF.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/20"
-          >
-            Download PDF
-          </button>
+          <div className="flex items-center gap-4">
+            <div className="text-right text-sm">
+              <p className="text-slate-500">Signed in as</p>
+              <p className="font-medium text-slate-900">{email}</p>
+            </div>
+            <button
+              type="button"
+              onClick={clearStoredEmail}
+              className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+            >
+              Sign out
+            </button>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/20"
+            >
+              Download PDF
+            </button>
+          </div>
         </div>
       </header>
 
