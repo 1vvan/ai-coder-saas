@@ -1,0 +1,16 @@
+# Python / uv
+backend/.venv/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Temporary SQLite database (recreated on every startup)
+*.db
+
+# Node / Next
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Editor / OS
+.DS_Store

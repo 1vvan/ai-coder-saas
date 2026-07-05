@@ -1,12 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import LoginScreen from "@/components/LoginScreen";
 import NdaDocument from "@/components/NdaDocument";
 import NdaForm from "@/components/NdaForm";
+import type { User } from "@/lib/api";
 import { defaultFormData } from "@/lib/nda";
+
+const USER_KEY = "prelegal.user";
 
 export default function Home() {
   const [data, setData] = useState(defaultFormData);
+  const [user, setUser] = useState<User | null>(null);
+  const [ready, setReady] = useState(false);
+
+  // Restore a previous (fake) session from localStorage on first render.
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(USER_KEY);
+      if (stored) setUser(JSON.parse(stored) as User);
+    } catch {
+      // ignore malformed storage
+    }
+    setReady(true);
+  }, []);
+
+  function handleSignedIn(u: User) {
+    setUser(u);
+    try {
+      localStorage.setItem(USER_KEY, JSON.stringify(u));
+    } catch {
+      // ignore storage failures
+    }
+  }
+
+  function handleSignOut() {
+    setUser(null);
+    try {
+      localStorage.removeItem(USER_KEY);
+    } catch {
+      // ignore storage failures
+    }
+  }
+
+  // Avoid a flash of the login screen before we've checked storage.
+  if (!ready) return null;
+
+  if (!user) {
+    return <LoginScreen onSignedIn={handleSignedIn} />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
@@ -19,13 +61,26 @@ export default function Home() {
               PDF.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/20"
-          >
-            Download PDF
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:opacity-90"
+              style={{ backgroundColor: "#753991" }}
+            >
+              Download PDF
+            </button>
+            <div className="flex items-center gap-2 text-sm">
+              <span style={{ color: "#888888" }}>Hi, {user.name}</span>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="rounded-md border border-slate-300 px-3 py-2 font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 
