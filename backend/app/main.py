@@ -13,17 +13,27 @@ load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 import logging  # noqa: E402
 import os  # noqa: E402
+from contextlib import asynccontextmanager  # noqa: E402
 
 from fastapi import FastAPI, HTTPException  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
 from .chat import run_chat  # noqa: E402
-from .models import ChatRequest, ChatResponse  # noqa: E402
+from .db import init_db, record_login  # noqa: E402
+from .models import ChatRequest, ChatResponse, LoginRequest, LoginResponse  # noqa: E402
 
 logger = logging.getLogger("prelegal")
 
-app = FastAPI(title="Prelegal API")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # Fresh temporary database on every startup (PL-3 foundation).
+    init_db()
+    yield
+
+
+app = FastAPI(title="Prelegal API", lifespan=lifespan)
 
 # The frontend runs on next dev (localhost, any port during development).
 app.add_middleware(
@@ -37,6 +47,17 @@ app.add_middleware(
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.post("/api/login", response_model=LoginResponse)
+def login(req: LoginRequest) -> LoginResponse:
+    # Fake login: no authentication yet (PL-3). Any non-empty email lets the
+    # user in; the password is intentionally ignored and never stored.
+    email = req.email.strip()
+    if not email:
+        raise HTTPException(status_code=422, detail="Email is required.")
+    record_login(email)
+    return LoginResponse(ok=True, email=email)
 
 
 @app.post("/api/chat", response_model=ChatResponse)

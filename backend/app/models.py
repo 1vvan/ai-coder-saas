@@ -70,3 +70,13 @@ class ChatResponse(CamelModel):
     reply: str
     fields: NdaFields
     complete: bool
+
+
+class LoginRequest(CamelModel):
+    email: str
+    password: str
+
+
+class LoginResponse(CamelModel):
+    ok: bool
+    email: str
