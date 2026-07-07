@@ -5,7 +5,7 @@
 // that registry and renders forms/previews from it, and fetches each type's
 // verbatim Standard Terms for the document body.
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+import { API_BASE, authFetch } from "@/lib/session";
 
 export type FieldKind = "text" | "textarea" | "date" | "select" | "number";
 
@@ -129,4 +129,70 @@ export function mergeParties(
     byRole.set(party.role, merged);
   }
   return roles.map((role) => byRole.get(role) ?? { role });
+}
+
+// --- Saved documents / drafts (PL-6) --------------------------------------
+
+export interface DocumentSummary {
+  id: number;
+  docType: string;
+  title: string;
+  complete: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SavedDocument extends DocumentSummary {
+  fields: FieldValue[];
+  parties: PartyInfo[];
+}
+
+export interface SaveDraftInput {
+  id?: number;
+  documentType: string;
+  title?: string;
+  values: Record<string, string>;
+  parties: PartyInfo[];
+  complete: boolean;
+}
+
+export async function listDrafts(): Promise<DocumentSummary[]> {
+  const res = await authFetch("/api/drafts");
+  if (!res.ok) throw new Error(`Failed to load your documents (${res.status})`);
+  return res.json();
+}
+
+export async function saveDraft(input: SaveDraftInput): Promise<SavedDocument> {
+  const res = await authFetch("/api/drafts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id: input.id,
+      documentType: input.documentType,
+      title: input.title,
+      fields: Object.entries(input.values).map(([key, value]) => ({ key, value })),
+      parties: input.parties,
+      complete: input.complete,
+    }),
+  });
+  if (!res.ok) throw new Error(`Failed to save (${res.status})`);
+  return res.json();
+}
+
+export async function getDraft(id: number): Promise<SavedDocument> {
+  const res = await authFetch(`/api/drafts/${id}`);
+  if (!res.ok) throw new Error(`Failed to open document (${res.status})`);
+  return res.json();
+}
+
+export async function deleteDraft(id: number): Promise<void> {
+  const res = await authFetch(`/api/drafts/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error(`Failed to delete (${res.status})`);
+}
+
+/** Convert a saved document's flat field list back into a values record. */
+export function valuesFromFields(fields: FieldValue[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const { key, value } of fields) out[key] = value;
+  return out;
 }

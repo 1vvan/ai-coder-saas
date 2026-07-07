@@ -44,9 +44,15 @@ export default function DocumentPreview({
       className="mx-auto max-w-[8.5in] space-y-6 bg-white p-10 text-slate-900"
     >
       <header className="space-y-1 text-center">
-        <h1 className="text-2xl font-bold">{title}</h1>
+        <h1 className="text-2xl font-bold text-navy">{title}</h1>
         <p className="text-sm text-slate-500">Cover Page</p>
       </header>
+
+      <div className="rounded-md border border-brand-yellow/50 bg-brand-yellow/10 px-4 py-2.5 text-center text-xs text-navy/80">
+        <strong className="font-semibold">Draft — subject to legal review.</strong>{" "}
+        This document is a draft generated for convenience and is not legal
+        advice. Have it reviewed by a qualified attorney before signing.
+      </div>
 
       <dl className="space-y-4 text-sm">
         {doc.fields.map((field) => {
@@ -102,7 +108,7 @@ export default function DocumentPreview({
       </div>
 
       <section className="space-y-3 border-t border-slate-300 pt-6">
-        <h2 className="text-xl font-bold">Standard Terms</h2>
+        <h2 className="text-xl font-bold text-navy">Standard Terms</h2>
         <div className="space-y-2 text-sm leading-relaxed text-slate-700">
           {terms.map((block, index) => (
             <p

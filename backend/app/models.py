@@ -60,6 +60,38 @@ class LoginRequest(CamelModel):
     password: str
 
 
-class LoginResponse(CamelModel):
-    ok: bool
+class SignupRequest(CamelModel):
     email: str
+    password: str
+
+
+class AuthResponse(CamelModel):
+    """Returned by /api/signup and /api/login: the session token and email."""
+
+    token: str
+    email: str
+
+
+class SaveDocumentRequest(CamelModel):
+    """Persist (create or update) a user's generated document."""
+
+    id: Optional[int] = None
+    document_type: str
+    title: Optional[str] = None
+    fields: list[FieldValue] = []
+    parties: list[PartyInfo] = []
+    complete: bool = False
+
+
+class DocumentSummary(CamelModel):
+    id: int
+    doc_type: str
+    title: str
+    complete: bool
+    created_at: str
+    updated_at: str
+
+
+class SavedDocument(DocumentSummary):
+    fields: list[FieldValue] = []
+    parties: list[PartyInfo] = []
