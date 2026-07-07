@@ -3,10 +3,25 @@
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Prelegal brand palette (see CLAUDE.md § Color Scheme). */
+  --color-navy: #032147;
+  --color-brand-blue: #209dd7;
+  --color-brand-purple: #753991;
+  --color-brand-yellow: #ecad0a;
+  --color-brand-gray: #888888;
 }
 
 body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Soft branded backdrop used behind the auth screen and the app shell. */
+.brand-surface {
+  background:
+    radial-gradient(60rem 40rem at 110% -10%, rgba(32, 157, 215, 0.12), transparent 60%),
+    radial-gradient(50rem 40rem at -10% 110%, rgba(117, 57, 145, 0.1), transparent 60%),
+    #f6f8fb;
 }
 
 /*
