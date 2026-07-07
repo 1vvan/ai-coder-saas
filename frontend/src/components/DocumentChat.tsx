@@ -2,26 +2,38 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import type { NdaFormData } from "@/lib/nda";
-import { mergeFields, sendChat, type ChatMessage } from "@/lib/chat";
+import {
+  sendChat,
+  type ChatApiResponse,
+  type ChatMessage,
+  type PartyInfo,
+} from "@/lib/documents";
 
-interface NdaChatProps {
-  data: NdaFormData;
-  onChange: (data: NdaFormData) => void;
+interface DocumentChatProps {
+  documentType: string | null;
+  values: Record<string, string>;
+  parties: PartyInfo[];
+  complete: boolean;
+  onResult: (result: ChatApiResponse) => void;
 }
 
 const GREETING =
-  "Hi! I'm Prelegal. Tell me about the NDA you need — who the two parties are " +
-  "and what you'll be sharing — and I'll fill it in as we go. What are you " +
-  "working on?";
+  "Hi! I'm Prelegal. I can draft any of our supported legal agreements — an " +
+  "NDA, cloud service agreement, pilot, DPA, and more. What kind of document " +
+  "do you need, and what's it for?";
 
-export default function NdaChat({ data, onChange }: NdaChatProps) {
+export default function DocumentChat({
+  documentType,
+  values,
+  parties,
+  complete,
+  onResult,
+}: DocumentChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: "assistant", content: GREETING },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [complete, setComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -40,10 +52,9 @@ export default function NdaChat({ data, onChange }: NdaChatProps) {
     setError(null);
 
     try {
-      const res = await sendChat(history, data);
-      onChange(mergeFields(data, res.fields));
+      const res = await sendChat(history, documentType, values, parties);
+      onResult(res);
       setMessages([...history, { role: "assistant", content: res.reply }]);
-      setComplete(res.complete);
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Something went wrong. Please try again.",
@@ -116,7 +127,7 @@ export default function NdaChat({ data, onChange }: NdaChatProps) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={onKeyDown}
-          placeholder="Describe your NDA…"
+          placeholder="Describe the document you need…"
           disabled={loading}
         />
         <button

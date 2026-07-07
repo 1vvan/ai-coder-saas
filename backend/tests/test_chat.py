@@ -1,62 +1,69 @@
-"""Tests for the AI chat backend.
+"""Tests for the type-aware AI chat backend (PL-4/PL-5).
 
-The LLM call itself is mocked, so these run without network or an API key and
-exercise the parts we own: message assembly, structured-output parsing, the
-camelCase JSON contract with the frontend, and the /api/chat route.
+The LLM call is mocked, so these run without network or a key and exercise the
+parts we own: message assembly, structured-output parsing, the camelCase
+contract, and the routes.
 """
 
 from __future__ import annotations
 
 import json
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app import chat as chat_module
 from app.main import app
-from app.models import AiChatResult, ChatRequest, NdaFields
+from app.models import AiChatResult, ChatRequest
 
 client = TestClient(app)
 
 
-def test_nda_fields_uses_camelcase_json():
-    fields = NdaFields(effective_date="2026-07-05", nda_term_kind="expires")
-    dumped = fields.model_dump(by_alias=True, exclude_none=True)
-    assert dumped == {"effectiveDate": "2026-07-05", "ndaTermKind": "expires"}
-
-
-def test_nda_fields_accepts_camelcase_input():
-    fields = NdaFields.model_validate(
-        {"governingLaw": "Delaware", "party1": {"printName": "Jane Doe"}}
+def test_result_uses_camelcase_json():
+    result = AiChatResult(
+        reply="hi", document_type="pilot-agreement", suggested_type="mutual-nda"
     )
-    assert fields.governing_law == "Delaware"
-    assert fields.party1 is not None and fields.party1.print_name == "Jane Doe"
+    dumped = result.model_dump(by_alias=True)
+    assert dumped["documentType"] == "pilot-agreement"
+    assert dumped["suggestedType"] == "mutual-nda"
 
 
-def test_build_messages_includes_known_values_and_history():
+def test_request_accepts_camelcase_input():
+    req = ChatRequest.model_validate(
+        {
+            "messages": [{"role": "user", "content": "hi"}],
+            "documentType": "cloud-service-agreement",
+            "fields": [{"key": "fees", "value": "$100/mo"}],
+            "parties": [{"role": "Provider", "printName": "Jane"}],
+        }
+    )
+    assert req.document_type == "cloud-service-agreement"
+    assert req.fields[0].key == "fees"
+    assert req.parties[0].print_name == "Jane"
+
+
+def test_system_prompt_lists_all_types():
+    # The catalog embedded in the prompt should mention every supported slug.
+    assert "mutual-nda" in chat_module.SYSTEM_PROMPT
+    assert "business-associate-agreement" in chat_module.SYSTEM_PROMPT
+    assert "ai-addendum" in chat_module.SYSTEM_PROMPT
+
+
+def test_build_messages_includes_state_and_history():
     req = ChatRequest.model_validate(
         {
             "messages": [{"role": "user", "content": "Let's start"}],
-            "currentFields": {"governingLaw": "Delaware"},
+            "documentType": "service-level-agreement",
+            "fields": [{"key": "targetUptime", "value": "99.9%"}],
         }
     )
     messages = chat_module.build_messages(req)
     assert messages[0]["role"] == "system"
-    assert "Delaware" in messages[0]["content"]
+    assert "service-level-agreement" in messages[0]["content"]
+    assert "99.9%" in messages[0]["content"]
     assert messages[-1] == {"role": "user", "content": "Let's start"}
 
 
-def test_build_messages_omits_context_when_no_known_values():
-    req = ChatRequest.model_validate(
-        {"messages": [{"role": "user", "content": "hi"}], "currentFields": {}}
-    )
-    system = chat_module.build_messages(req)[0]["content"]
-    assert "Values already captured" not in system
-
-
 def _mock_completion(structured: dict):
-    """Return a fake litellm.completion that yields the given structured JSON."""
-
     def _fake(*args, **kwargs):
         content = json.dumps(structured)
 
@@ -79,43 +86,38 @@ def _mock_completion(structured: dict):
 
 def test_run_chat_parses_structured_output(monkeypatch):
     structured = {
-        "reply": "Great, what's the purpose?",
-        "fields": {"governingLaw": "Delaware"},
+        "reply": "What's the pilot period?",
+        "documentType": "pilot-agreement",
+        "fields": [{"key": "product", "value": "Acme Widget"}],
+        "parties": [{"role": "Provider", "printName": "Jane", "company": "Acme"}],
         "complete": False,
     }
     monkeypatch.setattr(chat_module, "completion", _mock_completion(structured))
     req = ChatRequest.model_validate(
-        {"messages": [{"role": "user", "content": "hi"}], "currentFields": {}}
+        {"messages": [{"role": "user", "content": "pilot"}]}
     )
     result = chat_module.run_chat(req)
     assert isinstance(result, AiChatResult)
-    assert result.fields.governing_law == "Delaware"
-    assert result.complete is False
+    assert result.document_type == "pilot-agreement"
+    assert result.fields[0].value == "Acme Widget"
 
 
 def test_chat_endpoint_returns_camelcase(monkeypatch):
     structured = {
-        "reply": "All set!",
-        "fields": {
-            "effectiveDate": "2026-07-05",
-            "party1": {"printName": "Jane Doe", "company": "Acme"},
-        },
-        "complete": True,
+        "reply": "I can't do that, but a Cloud Service Agreement is closest.",
+        "unsupported": True,
+        "suggestedType": "cloud-service-agreement",
+        "complete": False,
     }
     monkeypatch.setattr(chat_module, "completion", _mock_completion(structured))
     resp = client.post(
         "/api/chat",
-        json={
-            "messages": [{"role": "user", "content": "Acme, effective today"}],
-            "currentFields": {"purpose": "Evaluate a deal"},
-        },
+        json={"messages": [{"role": "user", "content": "I need an employment contract"}]},
     )
     assert resp.status_code == 200
     body = resp.json()
-    assert body["reply"] == "All set!"
-    assert body["complete"] is True
-    assert body["fields"]["effectiveDate"] == "2026-07-05"
-    assert body["fields"]["party1"]["printName"] == "Jane Doe"
+    assert body["unsupported"] is True
+    assert body["suggestedType"] == "cloud-service-agreement"
 
 
 def test_chat_endpoint_handles_llm_error(monkeypatch):
@@ -124,8 +126,7 @@ def test_chat_endpoint_handles_llm_error(monkeypatch):
 
     monkeypatch.setattr(chat_module, "completion", _boom)
     resp = client.post(
-        "/api/chat",
-        json={"messages": [{"role": "user", "content": "hi"}], "currentFields": {}},
+        "/api/chat", json={"messages": [{"role": "user", "content": "hi"}]}
     )
     assert resp.status_code == 502
     assert "unavailable" in resp.json()["detail"].lower()

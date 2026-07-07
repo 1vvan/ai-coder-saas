@@ -28,6 +28,9 @@ RUN uv sync --frozen --no-dev
 # Backend source
 COPY backend/ ./
 
+# Legal document templates (backend serves their verbatim Standard Terms)
+COPY templates/ /app/templates
+
 # Static frontend produced by stage 1
 COPY --from=frontend /app/frontend/out /app/static
 ENV PRELEGAL_STATIC_DIR=/app/static

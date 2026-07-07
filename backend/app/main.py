@@ -21,7 +21,9 @@ from fastapi.staticfiles import StaticFiles  # noqa: E402
 
 from .chat import run_chat  # noqa: E402
 from .db import init_db, record_login  # noqa: E402
-from .models import ChatRequest, ChatResponse, LoginRequest, LoginResponse  # noqa: E402
+from .documents import get_document_type, registry_as_api  # noqa: E402
+from .models import AiChatResult, ChatRequest, LoginRequest, LoginResponse  # noqa: E402
+from .terms import parse_terms  # noqa: E402
 
 logger = logging.getLogger("prelegal")
 
@@ -60,10 +62,27 @@ def login(req: LoginRequest) -> LoginResponse:
     return LoginResponse(ok=True, email=email)
 
 
-@app.post("/api/chat", response_model=ChatResponse)
-def chat(req: ChatRequest) -> ChatResponse:
+@app.get("/api/documents")
+def documents() -> dict:
+    return {"documentTypes": registry_as_api()}
+
+
+@app.get("/api/documents/{slug}/terms")
+def document_terms(slug: str) -> dict:
+    doc = get_document_type(slug)
+    if doc is None:
+        raise HTTPException(status_code=404, detail=f"Unknown document type: {slug}")
+    return {
+        "slug": doc.slug,
+        "title": doc.title,
+        "terms": [dict(block) for block in parse_terms(doc.template_file)],
+    }
+
+
+@app.post("/api/chat", response_model=AiChatResult)
+def chat(req: ChatRequest) -> AiChatResult:
     try:
-        result = run_chat(req)
+        return run_chat(req)
     except Exception as exc:  # noqa: BLE001 - surface a clean error to the client
         logger.exception("chat completion failed")
         raise HTTPException(
@@ -73,7 +92,6 @@ def chat(req: ChatRequest) -> ChatResponse:
                 "OPENROUTER_API_KEY and try again."
             ),
         ) from exc
-    return ChatResponse(reply=result.reply, fields=result.fields, complete=result.complete)
 
 
 # Serve the statically-exported frontend from the same origin, when present
