@@ -56,3 +56,37 @@ Backend available at http://localhost:8000
 
 ## Implementation Status
 
+The V1 product is complete — all planned Jira stories (PL-1 → PL-6) are delivered and merged to `main`.
+
+### Delivered
+- **PL-1 — Template dataset:** 11 Common Paper legal templates in `templates/` (CC BY 4.0), indexed by `catalog.json`.
+- **PL-2 — Mutual NDA prototype:** initial form-based NDA creator (superseded by the AI chat).
+- **PL-3 — V1 foundation:** FastAPI backend, Next.js frontend, throwaway SQLite DB, and start/stop scripts for Mac/Linux/Windows.
+- **PL-4 — AI chat:** freeform chat that drives document drafting via the LLM instead of a fixed form.
+- **PL-5 — All document types:** the chat supports all 11 types, detects the wanted type, and offers the closest match when an unsupported document is requested.
+- **PL-6 — Multiple users & final polish:** real accounts, per-user saved documents, professional SaaS styling, and a draft/legal-review disclaimer.
+
+### Architecture
+- **Backend** (`backend/`, uv + FastAPI, Python 3.14):
+  - `main.py` — routes and the `Bearer`-token auth dependency.
+  - `db.py` — throwaway SQLite recreated on every startup; `users` (salted PBKDF2-HMAC-SHA256 hashes), `sessions` (opaque tokens), and `documents` tables.
+  - `documents.py` — registry of the 11 document types (fields, party roles) — single source of truth for the chat, forms, and previews.
+  - `chat.py` — LiteLLM → OpenRouter `openai/gpt-oss-120b` (Cerebras provider) with Structured Outputs.
+  - `terms.py` — parses each template's verbatim Standard Terms (never LLM-generated).
+- **Frontend** (`frontend/`, Next.js 16 + React 19 + Tailwind v4), statically exported (`output: "export"`) and served by FastAPI from the same origin in the container.
+- **Packaging:** multi-stage `Dockerfile` builds the static frontend, then runs the FastAPI backend serving both `/api/*` and the static files on port 8000.
+
+### API endpoints
+- Auth: `POST /api/signup`, `POST /api/login`, `POST /api/logout`, `GET /api/me`
+- Document catalog: `GET /api/documents`, `GET /api/documents/{slug}/terms`
+- Saved drafts (auth): `GET/POST /api/drafts`, `GET/DELETE /api/drafts/{id}`
+- Chat: `POST /api/chat` · Health: `GET /api/health`
+
+### Running & tests
+- Start: `bash scripts/start-mac.sh` (builds the image, runs the container) → http://localhost:8000 · Stop: `bash scripts/stop-mac.sh`.
+- Backend tests: `cd backend && uv run --frozen pytest` (auth, sessions, per-user draft isolation, chat, document registry).
+- Frontend: `cd frontend && npm run build && npm run lint`.
+
+### Known constraints (by design)
+- The SQLite database is intentionally temporary and is wiped on every container restart, so accounts and saved documents do not persist across restarts.
+- Generated documents are drafts only and are labeled as subject to legal review.
